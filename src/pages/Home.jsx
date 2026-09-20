@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { positions, categories, filterTags } from "../data/positions";
 import PositionCard from "../components/PositionCard";
 import Header from "../components/Header";
@@ -29,11 +29,19 @@ function matchesFilter(position, filter) {
 
 export default function Home() {
   const [activeFilter, setActiveFilter] = useState("全部");
+  const [searchParams, setSearchParams] = useSearchParams();
+  // 从姿势详情页点标签跳过来时，用标签筛选，优先级高于分类筛选
+  const tag = searchParams.get("tag");
 
-  const filtered = useMemo(
-    () => positions.filter((p) => matchesFilter(p, activeFilter)),
-    [activeFilter]
-  );
+  const filtered = useMemo(() => {
+    if (tag) return positions.filter((p) => p.tags.includes(tag));
+    return positions.filter((p) => matchesFilter(p, activeFilter));
+  }, [tag, activeFilter]);
+
+  const pickFilter = (item) => {
+    if (tag) setSearchParams({}, { replace: true });
+    setActiveFilter(item);
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -69,9 +77,9 @@ export default function Home() {
           {filterTags.map((item) => (
             <button
               key={item}
-              onClick={() => setActiveFilter(item)}
+              onClick={() => pickFilter(item)}
               className={`flex-shrink-0 px-4 py-1.5 rounded-full text-sm font-medium border transition ${
-                activeFilter === item
+                !tag && activeFilter === item
                   ? "bg-rose-500 border-rose-500 text-white"
                   : "bg-white border-gray-200 text-gray-700 hover:border-rose-300 hover:text-rose-600"
               }`}
@@ -83,11 +91,21 @@ export default function Home() {
       </section>
 
       <section id="list" className="max-w-6xl mx-auto px-4 py-8">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-semibold text-gray-900">
-            {activeFilter === "全部" ? "全部姿势" : activeFilter}
+        <div className="flex items-center justify-between mb-4 gap-3">
+          <h2 className="text-xl font-semibold text-gray-900 truncate">
+            {tag ? `标签 · ${tag}` : activeFilter === "全部" ? "全部姿势" : activeFilter}
           </h2>
-          <span className="text-sm text-gray-500">{filtered.length} 个</span>
+          <div className="flex items-center gap-3 flex-shrink-0">
+            <span className="text-sm text-gray-500">{filtered.length} 个</span>
+            {tag && (
+              <button
+                onClick={() => setSearchParams({}, { replace: true })}
+                className="text-sm text-rose-500 hover:text-rose-600"
+              >
+                清除标签
+              </button>
+            )}
+          </div>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {filtered.map((p) => (

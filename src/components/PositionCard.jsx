@@ -1,14 +1,19 @@
 import { Link } from "react-router-dom";
 import PositionIllustration from "./PositionIllustration";
 
-export default function PositionCard({ position }) {
+export default function PositionCard({ position, badge }) {
   return (
     <Link
       to={`/position/${position.id}`}
       className="group block bg-white rounded-2xl overflow-hidden border border-gray-100 hover:shadow-lg transition-shadow"
     >
-      <div className="aspect-[16/10] bg-gradient-to-br from-rose-50 to-orange-50 flex items-center justify-center overflow-hidden">
+      <div className="relative aspect-[16/10] bg-gradient-to-br from-rose-50 to-orange-50 flex items-center justify-center overflow-hidden">
         <PositionIllustration id={position.id} name={position.name} />
+        {badge && (
+          <span className="absolute left-2 top-2 max-w-[calc(100%-1rem)] truncate rounded-full bg-white/90 px-2 py-0.5 text-[10px] font-medium text-gray-600 shadow-sm">
+            {badge.type} · {badge.label}
+          </span>
+        )}
       </div>
       <div className="p-4">
         <div className="flex items-center justify-between mb-1 gap-2">

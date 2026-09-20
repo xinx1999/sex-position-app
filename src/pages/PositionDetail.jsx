@@ -1,9 +1,37 @@
 import { useParams, Link } from "react-router-dom";
 import { positions } from "../data/positions";
+import { recommend, ladder } from "../data/recommend";
 import Header from "../components/Header";
 import StepList from "../components/StepList";
 import PositionCard from "../components/PositionCard";
 import PositionIllustration from "../components/PositionIllustration";
+
+/** 难度阶梯里的一格 */
+function LadderBox({ p, hint, current }) {
+  const box = current
+    ? "border-rose-300 bg-rose-50"
+    : "border-gray-100 bg-white hover:shadow-md hover:border-rose-200";
+  const inner = (
+    <>
+      <div className="aspect-[16/10] flex items-center justify-center overflow-hidden">
+        <PositionIllustration id={p.id} name={p.name} />
+      </div>
+      <div className="px-2 py-1.5 text-center">
+        <p className="text-[11px] text-gray-400">{hint}</p>
+        <p className={`text-xs font-medium truncate ${current ? "text-rose-600" : "text-gray-800"}`}>
+          {p.name}
+        </p>
+        <p className="text-[10px] text-amber-500">{"★".repeat(p.difficulty)}</p>
+      </div>
+    </>
+  );
+  if (current) return <div className={`rounded-xl border ${box} overflow-hidden`}>{inner}</div>;
+  return (
+    <Link to={`/position/${p.id}`} className={`block rounded-xl border ${box} overflow-hidden transition`}>
+      {inner}
+    </Link>
+  );
+}
 
 export default function PositionDetail() {
   const { id } = useParams();
@@ -20,7 +48,8 @@ export default function PositionDetail() {
     );
   }
 
-  const relatedPositions = positions.filter((p) => position.related?.includes(p.id));
+  const recs = recommend(position.id, 8);
+  const lad = ladder(position.id);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -59,6 +88,17 @@ export default function PositionDetail() {
             </div>
           </div>
           <p className="mt-3 text-gray-600">{position.description}</p>
+          <div className="mt-3 flex flex-wrap gap-2">
+            {position.tags.map((t) => (
+              <Link
+                key={t}
+                to={`/?tag=${encodeURIComponent(t)}`}
+                className="text-xs px-2.5 py-1 rounded-full bg-gray-100 text-gray-600 hover:bg-rose-100 hover:text-rose-600 transition"
+              >
+                #{t}
+              </Link>
+            ))}
+          </div>
         </div>
 
         {/* 姿势示意图 */}
@@ -123,12 +163,39 @@ export default function PositionDetail() {
           </p>
         </section>
 
-        {relatedPositions.length > 0 && (
+        {(lad.easier || lad.harder) && (
+          <section className="mb-8">
+            <h2 className="text-lg font-semibold text-gray-900 mb-1">难度阶梯</h2>
+            <p className="text-xs text-gray-400 mb-3">
+              撑不住就往左退一步，觉得轻松就往右上一级
+            </p>
+            <div className="grid grid-cols-3 gap-2 sm:gap-3">
+              {lad.easier ? (
+                <LadderBox p={lad.easier} hint="← 更省力" />
+              ) : (
+                <div className="rounded-xl border border-dashed border-gray-200 flex items-center justify-center text-[11px] text-gray-300">
+                  已是最简单的同类
+                </div>
+              )}
+              <LadderBox p={position} hint="当前" current />
+              {lad.harder ? (
+                <LadderBox p={lad.harder} hint="更有挑战 →" />
+              ) : (
+                <div className="rounded-xl border border-dashed border-gray-200 flex items-center justify-center text-[11px] text-gray-300">
+                  已是最高难度
+                </div>
+              )}
+            </div>
+          </section>
+        )}
+
+        {recs.length > 0 && (
           <section>
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">相关姿势</h2>
+            <h2 className="text-lg font-semibold text-gray-900 mb-1">相关姿势</h2>
+            <p className="text-xs text-gray-400 mb-4">按分类、标签与难度自动匹配</p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {relatedPositions.map((p) => (
-                <PositionCard key={p.id} position={p} />
+              {recs.map((r) => (
+                <PositionCard key={r.position.id} position={r.position} badge={r.reason} />
               ))}
             </div>
           </section>
