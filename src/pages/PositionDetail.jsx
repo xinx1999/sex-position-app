@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { positions } from "../data/positions";
 import { recommend, ladder } from "../data/recommend";
@@ -5,6 +6,10 @@ import Header from "../components/Header";
 import StepList from "../components/StepList";
 import PositionCard from "../components/PositionCard";
 import PositionIllustration from "../components/PositionIllustration";
+
+/** 相关姿势默认展示条数 / 展开后的总条数 */
+const REC_PREVIEW = 12;
+const REC_FULL = 24;
 
 /** 难度阶梯里的一格 */
 function LadderBox({ p, hint, current }) {
@@ -48,7 +53,9 @@ export default function PositionDetail() {
     );
   }
 
-  const recs = recommend(position.id, 8);
+  const [showAllRecs, setShowAllRecs] = useState(false);
+  const allRecs = recommend(position.id, REC_FULL);
+  const recs = showAllRecs ? allRecs : allRecs.slice(0, REC_PREVIEW);
   const lad = ladder(position.id);
 
   return (
@@ -191,13 +198,26 @@ export default function PositionDetail() {
 
         {recs.length > 0 && (
           <section>
-            <h2 className="text-lg font-semibold text-gray-900 mb-1">相关姿势</h2>
+            <div className="flex items-baseline justify-between mb-1 gap-3">
+              <h2 className="text-lg font-semibold text-gray-900">相关姿势</h2>
+              <span className="text-xs text-gray-400 flex-shrink-0">
+                共 {allRecs.length} 个匹配
+              </span>
+            </div>
             <p className="text-xs text-gray-400 mb-4">按分类、标签与难度自动匹配</p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {recs.map((r) => (
                 <PositionCard key={r.position.id} position={r.position} badge={r.reason} />
               ))}
             </div>
+            {allRecs.length > REC_PREVIEW && (
+              <button
+                onClick={() => setShowAllRecs((v) => !v)}
+                className="mt-4 w-full py-2.5 rounded-xl border border-gray-200 bg-white text-sm font-medium text-gray-600 hover:border-rose-300 hover:text-rose-600 transition"
+              >
+                {showAllRecs ? "收起" : `展开其余 ${allRecs.length - REC_PREVIEW} 个`}
+              </button>
+            )}
           </section>
         )}
       </main>

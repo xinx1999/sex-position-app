@@ -98,11 +98,19 @@ export function recommend(id, limit = 8) {
     .map((b) => {
       const s = scorePair(a, b);
       const extra = seed.has(b.id) ? SEED_BOOST : 0;
-      return { position: b, score: s.total + extra, reason: reasonOf(s, b), dd: s.dd };
+      return {
+        position: b,
+        score: s.total + extra,
+        reason: reasonOf(s, b),
+        dd: s.dd,
+        // 真有共同点：共享分类或共享标签。写死的 related 只加权，不算「有交集」
+        connected: s.cat.length > 0 || s.tags.length > 0,
+      };
     })
     .sort((x, y) => y.score - x.score);
 
-  const picked = ranked.slice(0, limit);
+  // 只保留真正有交集的，宁可数量少也不灌水
+  const picked = ranked.filter((r) => r.connected).slice(0, limit);
   const has = (t) => picked.some((r) => r.reason.type === t);
 
   // 保证网络里既有「更难」也有「更省力」的出口，避免全是同类
@@ -111,6 +119,7 @@ export function recommend(id, limit = 8) {
     ["省力", (r) => r.dd <= -1],
   ]) {
     if (has(type)) continue;
+    // 难度出口允许从全集里找（这是阶梯，不是同类），不受 connected 限制
     const cand = ranked.find((r) => ok(r) && !picked.includes(r));
     if (!cand) continue;
     if (picked.length < limit) picked.push(cand);
