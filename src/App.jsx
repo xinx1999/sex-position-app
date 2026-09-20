@@ -14,14 +14,22 @@ function ScrollManager() {
 
   useEffect(() => {
     const tag = new URLSearchParams(search).get("tag");
+
+    // 只在进入详情页时拉回顶部。首页切换筛选/标签不干预滚动，交给浏览器自己。
+    if (pathname.startsWith("/position/")) {
+      window.scrollTo(0, 0);
+      // 图片懒加载会把布局撑开，下一帧再压一次，避免又被顶下去
+      const id = requestAnimationFrame(() => window.scrollTo(0, 0));
+      return () => cancelAnimationFrame(id);
+    }
+
+    // 从详情页点标签回首页时，直接落到姿势列表，省得再手动往下翻
     if (tag) {
-      // 等列表渲染出来再滚
       const id = requestAnimationFrame(() => {
         document.getElementById("list")?.scrollIntoView({ behavior: "smooth", block: "start" });
       });
       return () => cancelAnimationFrame(id);
     }
-    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
   }, [pathname, search]);
 
   return null;

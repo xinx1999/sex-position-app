@@ -40,7 +40,19 @@ export default function Home() {
 
   const pickFilter = (item) => {
     if (tag) setSearchParams({}, { replace: true });
+
+    // 筛选后列表会变短，浏览器把滚动位置往下钳，看上去像"跳回顶部"。
+    // 如果切换前已经滚进列表了，就明确拉回列表开头，位置可预期。
+    const list = document.getElementById("list");
+    const wasPast = list ? list.getBoundingClientRect().top < 0 : false;
+
     setActiveFilter(item);
+
+    if (wasPast) {
+      requestAnimationFrame(() => {
+        document.getElementById("list")?.scrollIntoView({ behavior: "smooth", block: "start" });
+      });
+    }
   };
 
   return (
