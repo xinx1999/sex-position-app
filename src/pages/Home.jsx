@@ -1,6 +1,12 @@
 import { useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { positions, categories, filterTags } from "../data/positions";
+import {
+  positions,
+  filterCards,
+  filterTags,
+  intensityOptions,
+  flexibilityOptions,
+} from "../data/positions";
 import PositionCard from "../components/PositionCard";
 import Header from "../components/Header";
 
@@ -15,44 +21,93 @@ function needsProps(position) {
   return PROP_REQUIRED.test(text);
 }
 
-function matchesFilter(position, filter) {
-  if (filter === "全部") return true;
-  if (filter === "入门推荐") return position.category.includes("入门") || position.difficulty === 1;
-  if (filter === "经典姿势") return position.category.includes("经典");
-  if (filter === "侧重女方") return position.category.includes("侧重女方");
-  if (filter === "轻松舒适") return position.category.includes("轻松舒适") || position.intensity === "低";
-  if (filter === "高难度挑战") return position.category.includes("高难度") || position.difficulty >= 3;
-  if (filter === "需要道具")
-    return position.category.includes("道具辅助") || needsProps(position);
+function matchesGoal(position, goal) {
+  if (goal === "全部") return true;
+  if (goal === "入门推荐") return position.category.includes("入门") || position.difficulty === 1;
+  if (goal === "经典姿势") return position.category.includes("经典");
+  if (goal === "侧重女方") return position.category.includes("侧重女方");
+  if (goal === "轻松舒适") return position.category.includes("轻松舒适") || position.intensity === "低";
+  if (goal === "高难度挑战") return position.category.includes("高难度") || position.difficulty >= 3;
+  if (goal === "需要道具") return position.category.includes("道具辅助") || needsProps(position);
   return true;
 }
 
+/** 一排筛选胶囊 */
+function ChipRow({ label, options, value, onChange }) {
+  return (
+    <div className="flex items-center gap-2 overflow-x-auto py-1 scrollbar-hide">
+      <span className="flex-shrink-0 w-9 text-xs text-gray-400">{label}</span>
+      {options.map((o) => (
+        <button
+          key={o}
+          onClick={() => onChange(o)}
+          className={`flex-shrink-0 px-3 py-1.5 rounded-full text-sm font-medium border transition ${
+            value === o
+              ? "bg-rose-500 border-rose-500 text-white"
+              : "bg-white border-gray-200 text-gray-700 hover:border-rose-300 hover:text-rose-600"
+          }`}
+        >
+          {o}
+        </button>
+      ))}
+    </div>
+  );
+}
+
 export default function Home() {
-  const [activeFilter, setActiveFilter] = useState("全部");
+  const [goal, setGoal] = useState("全部");
+  const [intensity, setIntensity] = useState("全部");
+  const [flexibility, setFlexibility] = useState("全部");
   const [searchParams, setSearchParams] = useSearchParams();
-  // 从姿势详情页点标签跳过来时，用标签筛选，优先级高于分类筛选
+  // 从详情页点标签跳过来时带上的标签，和其它维度是「且」的关系
   const tag = searchParams.get("tag");
 
-  const filtered = useMemo(() => {
-    if (tag) return positions.filter((p) => p.tags.includes(tag));
-    return positions.filter((p) => matchesFilter(p, activeFilter));
-  }, [tag, activeFilter]);
+  const filtered = useMemo(
+    () =>
+      positions.filter(
+        (p) =>
+          matchesGoal(p, goal) &&
+          (intensity === "全部" || p.intensity === intensity) &&
+          (flexibility === "全部" || p.flexibility === flexibility) &&
+          (!tag || p.tags.includes(tag))
+      ),
+    [goal, intensity, flexibility, tag]
+  );
 
-  const pickFilter = (item) => {
-    if (tag) setSearchParams({}, { replace: true });
-
-    // 筛选后列表会变短，浏览器把滚动位置往下钳，看上去像"跳回顶部"。
-    // 如果切换前已经滚进列表了，就明确拉回列表开头，位置可预期。
+  /**
+   * 筛选后列表会变短，浏览器把滚动位置往下钳，看上去像"跳回顶部"。
+   * 如果切换前已经滚进列表了，就明确拉回列表开头，位置可预期。
+   */
+  const keepAtList = () => {
     const list = document.getElementById("list");
-    const wasPast = list ? list.getBoundingClientRect().top < 0 : false;
+    if (!list || list.getBoundingClientRect().top >= 0) return;
+    requestAnimationFrame(() => {
+      document.getElementById("list")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  };
 
-    setActiveFilter(item);
+  const clearAll = () => {
+    setGoal("全部");
+    setIntensity("全部");
+    setFlexibility("全部");
+    if (tag) setSearchParams({}, { replace: true });
+  };
 
-    if (wasPast) {
-      requestAnimationFrame(() => {
-        document.getElementById("list")?.scrollIntoView({ behavior: "smooth", block: "start" });
-      });
-    }
+  const conditions = [
+    goal !== "全部" ? goal : null,
+    intensity !== "全部" ? `${intensity}体力` : null,
+    flexibility !== "全部" ? `柔韧${flexibility}` : null,
+    tag ? `#${tag}` : null,
+  ].filter(Boolean);
+  const hasFilter = conditions.length > 0;
+
+  const CARD_TO_GOAL = {
+    beginner: "入门推荐",
+    classic: "经典姿势",
+    female: "侧重女方",
+    intense: "高难度挑战",
+    relaxed: "轻松舒适",
+    props: "需要道具",
   };
 
   return (
@@ -84,37 +139,24 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="max-w-6xl mx-auto px-4 py-6">
-        <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
-          {filterTags.map((item) => (
-            <button
-              key={item}
-              onClick={() => pickFilter(item)}
-              className={`flex-shrink-0 px-4 py-1.5 rounded-full text-sm font-medium border transition ${
-                !tag && activeFilter === item
-                  ? "bg-rose-500 border-rose-500 text-white"
-                  : "bg-white border-gray-200 text-gray-700 hover:border-rose-300 hover:text-rose-600"
-              }`}
-            >
-              {item}
-            </button>
-          ))}
+      <section className="max-w-6xl mx-auto px-4 pt-6">
+        <div className="bg-white rounded-2xl border border-gray-100 px-3 py-2 divide-y divide-gray-100">
+          <ChipRow label="目标" options={filterTags} value={goal} onChange={(v) => { setGoal(v); keepAtList(); }} />
+          <ChipRow label="体力" options={intensityOptions} value={intensity} onChange={(v) => { setIntensity(v); keepAtList(); }} />
+          <ChipRow label="柔韧" options={flexibilityOptions} value={flexibility} onChange={(v) => { setFlexibility(v); keepAtList(); }} />
         </div>
       </section>
 
       <section id="list" className="max-w-6xl mx-auto px-4 py-8">
         <div className="flex items-center justify-between mb-4 gap-3">
           <h2 className="text-xl font-semibold text-gray-900 truncate">
-            {tag ? `标签 · ${tag}` : activeFilter === "全部" ? "全部姿势" : activeFilter}
+            {hasFilter ? conditions.join(" · ") : "全部姿势"}
           </h2>
           <div className="flex items-center gap-3 flex-shrink-0">
             <span className="text-sm text-gray-500">{filtered.length} 个</span>
-            {tag && (
-              <button
-                onClick={() => setSearchParams({}, { replace: true })}
-                className="text-sm text-rose-500 hover:text-rose-600"
-              >
-                清除标签
+            {hasFilter && (
+              <button onClick={clearAll} className="text-sm text-rose-500 hover:text-rose-600">
+                清除筛选
               </button>
             )}
           </div>
@@ -125,31 +167,28 @@ export default function Home() {
           ))}
         </div>
         {filtered.length === 0 && (
-          <p className="text-center text-gray-500 py-12">该分类下暂无姿势</p>
+          <div className="text-center py-12">
+            <p className="text-gray-500">没有同时满足这些条件的姿势</p>
+            <button onClick={clearAll} className="mt-2 text-sm text-rose-500 hover:text-rose-600">
+              清除筛选
+            </button>
+          </div>
         )}
       </section>
 
       <section className="max-w-6xl mx-auto px-4 py-8">
         <h2 className="text-xl font-semibold text-gray-900 mb-4">按目标选择</h2>
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-          {categories.map((cat) => (
+          {filterCards.map((card) => (
             <button
-              key={cat.id}
+              key={card.id}
               onClick={() => {
-                const map = {
-                  beginner: "入门推荐",
-                  classic: "经典姿势",
-                  female: "侧重女方",
-                  intense: "高难度挑战",
-                  relaxed: "轻松舒适",
-                  props: "需要道具",
-                };
-                setActiveFilter(map[cat.id] || "全部");
+                setGoal(CARD_TO_GOAL[card.id] || "全部");
                 document.getElementById("list")?.scrollIntoView({ behavior: "smooth" });
               }}
-              className={`py-4 rounded-xl text-sm font-medium ${cat.color} hover:opacity-90 transition`}
+              className={`py-4 rounded-xl text-sm font-medium ${card.color} hover:opacity-90 transition`}
             >
-              {cat.name}
+              {card.name}
             </button>
           ))}
         </div>

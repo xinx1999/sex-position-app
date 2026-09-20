@@ -3,8 +3,24 @@
  *
  * 体系参考《性爱体位姿势大全》的 52 式，全部文案为本项目自行撰写。
  * 插图为 PDF 原图（public/poses/<id>.webp）。
+ *
+ * 两套词表不要混：
+ *   category = 受控分类（目标 / 体姿 / 特征），见 categoryVocab
+ *   tags     = 属性标签（抬腿、拥抱、女方主导…），详情页可点击筛选
  */
-export const categories = [
+
+/** 受控分类词表。改分类前先看这里，别造新词。 */
+export const categoryVocab = {
+  goal: ["入门", "经典", "侧重女方", "轻松舒适", "高难度", "道具辅助"],
+  posture: ["站立", "坐姿", "侧卧", "跪姿", "俯卧"],
+  trait: ["侧重深度", "侧重摩擦", "亲密", "挑战", "后入变体", "床沿", "反向", "抬臀"],
+};
+
+/**
+ * 首页「按目标选择」的六张卡片。
+ * 注意：这是 UI 用的筛选卡片，和每条数据里的 category 字符串不是同一个东西。
+ */
+export const filterCards = [
   { id: "beginner", name: "入门推荐", color: "bg-emerald-100 text-emerald-800" },
   { id: "classic", name: "经典姿势", color: "bg-blue-100 text-blue-800" },
   { id: "female", name: "侧重女方", color: "bg-pink-100 text-pink-800" },
@@ -13,6 +29,7 @@ export const categories = [
   { id: "props", name: "道具辅助", color: "bg-amber-100 text-amber-800" },
 ];
 
+/** 顶部「目标」筛选行 */
 export const filterTags = [
   "全部",
   "入门推荐",
@@ -22,6 +39,10 @@ export const filterTags = [
   "高难度挑战",
   "需要道具",
 ];
+
+/** 体力消耗 / 柔韧性要求，每个姿势都有值，所以一定能筛出结果 */
+export const intensityOptions = ["全部", "低", "中", "高"];
+export const flexibilityOptions = ["全部", "低", "中", "高"];
 
 export const positions = [
   {
@@ -88,7 +109,6 @@ export const positions = [
       "站立"
     ],
     "tags": [
-      "站立",
       "抬腿",
       "高灵活",
       "需要支撑"
@@ -140,10 +160,10 @@ export const positions = [
     "flexibility": "中",
     "category": [
       "高难度",
-      "挑战"
+      "挑战",
+      "站立"
     ],
     "tags": [
-      "站立",
       "高体力",
       "需要支撑"
     ],
@@ -300,10 +320,10 @@ export const positions = [
     "intensity": "高",
     "flexibility": "中",
     "category": [
-      "高难度"
+      "高难度",
+      "站立"
     ],
     "tags": [
-      "站立",
       "高体力",
       "需要支撑"
     ],
@@ -572,7 +592,6 @@ export const positions = [
       "坐姿"
     ],
     "tags": [
-      "坐姿",
       "反向",
       "拥抱"
     ],
@@ -619,11 +638,11 @@ export const positions = [
     "flexibility": "中",
     "category": [
       "后入变体",
-      "侧重深度"
+      "侧重深度",
+      "跪姿"
     ],
     "tags": [
       "后入",
-      "跪姿",
       "需要支撑"
     ],
     "description": "女方俯身弯腰、双手撑在矮凳或床沿上，男方从后方进入并双手抬起其腰部，角度更垂直。",
@@ -887,12 +906,12 @@ export const positions = [
     "flexibility": "中",
     "category": [
       "后入变体",
-      "侧重深度"
-    ],
-    "tags": [
-      "后入",
+      "侧重深度",
       "俯卧",
       "跪姿"
+    ],
+    "tags": [
+      "后入"
     ],
     "description": "女方趴在床上，男方跪在其双腿之间，从后方抬起她的一条腿并保持伸直，一手扶腰一手托小腿。",
     "suitable": "喜欢后入但想要改变角度与贴合度的伴侣",
@@ -941,11 +960,11 @@ export const positions = [
     "flexibility": "中",
     "category": [
       "高难度",
-      "后入变体"
+      "后入变体",
+      "站立"
     ],
     "tags": [
       "后入",
-      "站立",
       "高体力"
     ],
     "description": "由捞月式过渡而来：保持进入状态，男方改为抬起女方大腿并慢慢站直，女方同时用手撑地，形成类似推车的姿态。",
@@ -1054,7 +1073,6 @@ export const positions = [
       "坐姿"
     ],
     "tags": [
-      "坐姿",
       "反向",
       "高体力"
     ],
@@ -1106,10 +1124,10 @@ export const positions = [
     "category": [
       "入门",
       "轻松舒适",
-      "亲密"
+      "亲密",
+      "俯卧"
     ],
     "tags": [
-      "俯卧",
       "低体力",
       "拥抱"
     ],
@@ -1159,10 +1177,10 @@ export const positions = [
     "flexibility": "中",
     "category": [
       "高难度",
-      "亲密"
+      "亲密",
+      "侧卧"
     ],
     "tags": [
-      "侧卧",
       "高灵活",
       "互为"
     ],
@@ -1376,7 +1394,6 @@ export const positions = [
       "反向"
     ],
     "tags": [
-      "坐姿",
       "反向",
       "女方主导"
     ],
@@ -1533,10 +1550,10 @@ export const positions = [
     "category": [
       "入门",
       "轻松舒适",
-      "亲密"
+      "亲密",
+      "侧卧"
     ],
     "tags": [
-      "侧卧",
       "面对面",
       "低体力"
     ],
@@ -1585,11 +1602,11 @@ export const positions = [
     "flexibility": "高",
     "category": [
       "高难度",
-      "后入变体"
+      "后入变体",
+      "跪姿"
     ],
     "tags": [
       "后入",
-      "跪姿",
       "高灵活"
     ],
     "description": "女方趴在床上，男方跪在其双腿间先后抬起她两条大腿并保持跪姿，靠抬腿改变角度，整体类似跪着推手扶车。",
@@ -1697,7 +1714,6 @@ export const positions = [
       "侧卧"
     ],
     "tags": [
-      "侧卧",
       "反向",
       "高灵活"
     ],
@@ -1799,11 +1815,11 @@ export const positions = [
     "flexibility": "高",
     "category": [
       "高难度",
-      "抬臀"
+      "抬臀",
+      "跪姿"
     ],
     "tags": [
       "抬臀",
-      "跪姿",
       "高灵活"
     ],
     "description": "女方用双手手肘在身后撑住、抬起并张开大腿、高高抬起腹部，男方保持跪立姿态从正面进入，双手从两侧托住其大腿。",
@@ -1854,10 +1870,10 @@ export const positions = [
     "flexibility": "中",
     "category": [
       "挑战",
-      "高难度"
+      "高难度",
+      "侧卧"
     ],
     "tags": [
-      "侧卧",
       "深入",
       "力量"
     ],
@@ -1909,11 +1925,11 @@ export const positions = [
     "flexibility": "中",
     "category": [
       "经典",
-      "侧重深度"
+      "侧重深度",
+      "俯卧"
     ],
     "tags": [
       "抬腿",
-      "俯卧",
       "深入"
     ],
     "description": "女方仰面躺下、身体蜷起，大腿尽量贴近腹部；男方以跪立姿态进入，女方把一条腿搭在男方肩上，另一条腿保持蜷缩。男方一手扶住肩上的腿，一手压住蜷起的腿，俯身推进。整体像握着铁锹在掘土。",
@@ -2020,10 +2036,10 @@ export const positions = [
     "category": [
       "高难度",
       "挑战",
-      "道具辅助"
+      "道具辅助",
+      "站立"
     ],
     "tags": [
-      "站立",
       "需要支撑",
       "力量"
     ],
@@ -2075,11 +2091,11 @@ export const positions = [
     "flexibility": "中",
     "category": [
       "侧重女方",
-      "挑战"
+      "挑战",
+      "跪姿"
     ],
     "tags": [
       "女方主导",
-      "跪姿",
       "中体力"
     ],
     "description": "男方仰面平躺，女方以跪姿面向男方、跨在其腰间，张开腿扶住进入后上身前倾，双手撑在男方手臂之间，然后并拢双腿、收进男方双腿之间尽量伸直。此时由女方用臀部的上下动作获得快感，姿态像在抬头仰望。",
@@ -2455,11 +2471,11 @@ export const positions = [
     "flexibility": "中",
     "category": [
       "经典",
-      "侧重摩擦"
+      "侧重摩擦",
+      "跪姿"
     ],
     "tags": [
       "抬腿",
-      "跪姿",
       "中体力"
     ],
     "description": "女方仰面躺下，男方以跪姿骑在女方大腿上；女方抬起一条腿搭在男方肩上，男方进入后一手扶住肩上的腿，另一只手向后支撑身体，做前后推进。整体姿态像男方扶着橹在摇船。",
@@ -2564,10 +2580,10 @@ export const positions = [
     "category": [
       "入门",
       "轻松舒适",
-      "亲密"
+      "亲密",
+      "侧卧"
     ],
     "tags": [
-      "侧卧",
       "拥抱",
       "省力"
     ],
@@ -2729,10 +2745,10 @@ export const positions = [
     "flexibility": "高",
     "category": [
       "高难度",
-      "挑战"
+      "挑战",
+      "站立"
     ],
     "tags": [
-      "站立",
       "抬腿",
       "力量"
     ],
@@ -2784,10 +2800,10 @@ export const positions = [
     "flexibility": "高",
     "category": [
       "高难度",
-      "亲密"
+      "亲密",
+      "坐姿"
     ],
     "tags": [
-      "坐姿",
       "拥抱",
       "高灵活"
     ],
